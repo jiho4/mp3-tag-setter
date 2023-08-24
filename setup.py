@@ -2,6 +2,6 @@ from setuptools import setup
 
 setup(
     name="mp3-tag-setter",
-    version="1.0.0-SNAPSHOT",
+    version="1.0.0",
     package_data={'': ['*.yaml', '*.yml']},
 )
