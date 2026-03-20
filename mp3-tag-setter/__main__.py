@@ -1,4 +1,4 @@
-import set_tag
+from . import set_tag
 
 if __name__ == '__main__':
     input_folder_path = input("Enter the full path of root folder: ")

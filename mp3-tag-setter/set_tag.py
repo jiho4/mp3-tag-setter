@@ -1,17 +1,19 @@
 import os
+from pathlib import Path
 from typing import Final
 
 import mutagen
 import yaml
-from mutagen import File
+from mutagen import File, MutagenError
 from mutagen.id3 import ID3, ID3NoHeaderError, TALB
 
-from model.process_mode import ProcessMode
+from .model.process_mode import ProcessMode
 
-with open('resources/config.yml') as f:
+_config_path = Path(__file__).parent / 'resources' / 'config.yml'
+with open(_config_path) as f:
     __conf = yaml.safe_load(f)
 
-PROCESS_MODE: Final[str] = __conf['process_mode']
+PROCESS_MODE: Final[ProcessMode] = ProcessMode[__conf['process_mode']]
 
 
 def set_tags_in_folder(folder_path):
@@ -21,7 +23,7 @@ def set_tags_in_folder(folder_path):
                 if PROCESS_MODE == ProcessMode.SET_ALBUM_TAG_BY_PATH:
                     _set_album_tag_by_folder_name(root, file)
                 else:
-                    raise print('unexpected process_mode')  # TODO: add an exception
+                    raise ValueError(f'unexpected process_mode: {PROCESS_MODE}')
 
 
 def _set_album_tag_by_folder_name(root, file):
@@ -37,9 +39,7 @@ def _remove_tags(file_path):
     file = File(file_path)
 
     if file.tags is None:
-        # set blank tags to the file
-        tags = mutagen.File(file_path)
-        tags.add_tags()
+        file.add_tags()
     else:
         file.tags.clear()
 
@@ -55,13 +55,13 @@ def _set_album_tag(file_path, album_name):
         tags = mutagen.File(file_path)
         tags.add_tags()
 
-    if 'album' in tags:
-        raise print('album tag is already exist in ' + file_path)  # TODO: add an exception
+    if 'TALB' in tags:
+        raise ValueError('album tag already exists in ' + file_path)
     else:
         # set album tag
         try:
             tags.add(TALB(encoding=3, text=album_name))
-        except BaseException as e:  # TODO: change BaseException to a proper one
+        except MutagenError as e:
             print('An exception occurred: {}'.format(e))
             print(file_path)
 
